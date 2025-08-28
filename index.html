@@ -46,8 +46,9 @@
       background-color: var(--bg-color);
       color: var(--text-primary);
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
       min-height: 100vh;
       padding: 2rem 1rem;
       -webkit-font-smoothing: antialiased;
@@ -63,6 +64,7 @@
       max-width: 900px;
       text-align: center;
       transition: opacity 0.4s ease, transform 0.4s ease;
+      margin-bottom: 2rem;
     }
     
     .container.hidden {
@@ -75,18 +77,30 @@
       border-bottom: 1px solid var(--border-color);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
+      width: 100%;
     }
     
-    .header-top {
+    .header-main {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.75rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
     }
     
     .language-switcher {
         display: flex;
         gap: 0.5rem;
+        border: 1px solid var(--border-color);
+        padding: 4px;
+        border-radius: 8px;
     }
     
     .lang-button {
@@ -121,12 +135,12 @@
     
     .app-header p {
       text-align: left;
-      margin: 0.5rem 0 1.5rem 0;
+      margin: 0;
       color: var(--text-secondary);
       line-height: 1.6;
     }
 
-    #apiKeyInput, textarea {
+    #apiKeyModalInput, textarea, .text-input {
       width: 100%;
       padding: 1rem;
       border: 1px solid var(--border-color);
@@ -138,7 +152,7 @@
       font-family: inherit;
     }
     
-    #apiKeyInput:focus, textarea:focus {
+    #apiKeyModalInput:focus, textarea:focus, .text-input:focus {
       outline: none;
       border-color: var(--accent-color);
       box-shadow: 0 0 0 3px rgba(74, 106, 138, 0.2);
@@ -177,8 +191,24 @@
       position: relative;
     }
     
-    .button.secondary { background-color: #6c757d; }
-    .button.secondary:hover { background-color: #5a6268; }
+    .button.secondary, button.secondary { background-color: #6c757d; }
+    .button.secondary:hover, button.secondary:hover { background-color: #5a6268; }
+    
+    .button.icon-btn, button.icon-btn {
+        padding: 0;
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+        background-color: #e9ecef;
+        color: var(--text-secondary);
+        border-radius: 50%;
+    }
+    .button.icon-btn:hover, button.icon-btn:hover {
+        background-color: #dee2e6;
+        color: var(--text-primary);
+        transform: none;
+        box-shadow: none;
+    }
 
     button:hover:not(:disabled), .button:hover:not(:disabled) {
       background-color: var(--accent-hover);
@@ -201,6 +231,129 @@
     }
 
     .status-message.error { color: var(--error-color); }
+    .status-message.info { color: var(--text-secondary); }
+
+    /* MODAL STYLES */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    .modal-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .modal-content {
+        background-color: var(--surface-color);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px var(--shadow-medium);
+        width: 100%;
+        max-width: 500px;
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+        position: relative;
+    }
+    .modal-overlay.visible .modal-content {
+        transform: scale(1);
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+    .close-modal-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        padding: 0.5rem;
+        line-height: 1;
+    }
+    .modal-body p {
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        text-align: left;
+    }
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+    .api-key-tip {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        text-align: left;
+    }
+    .api-key-tip a {
+        color: var(--accent-color);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .api-key-tip a:hover {
+        text-decoration: underline;
+    }
+    
+    /* HISTORY MODAL */
+    .history-list {
+        list-style: none;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    .history-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-radius: 8px;
+        transition: background-color 0.2s;
+    }
+    .history-item:hover {
+        background-color: var(--bg-color);
+    }
+    .history-item-info {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+    }
+    .history-item-topic {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+    .history-item-meta {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+    .history-item-actions button {
+        margin-left: 0.5rem;
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+    .no-history {
+        color: var(--text-secondary);
+        padding: 2rem 0;
+    }
+
 
     /* View Transitions */
     .view {
@@ -369,7 +522,7 @@
     .dictation-results-table .status-incorrect { color: var(--error-color); }
     .dictation-results-table .correct-answer-feedback { font-size: 0.85em; color: var(--text-secondary); margin-top: 0.25rem; }
 
-    .hidden { display: none; }
+    .hidden { display: none !important; }
     
     .spinner {
       border: 3px solid rgba(255, 255, 255, 0.3);
@@ -526,13 +679,19 @@
     .match-completion-message {
         margin-top: 2rem;
     }
+    
+    footer {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        padding: 1rem;
+    }
 
     @media (max-width: 768px) {
       body { padding: 1rem 0.5rem; }
       .container { padding: 1.5rem; }
-      .header-top { flex-direction: column; align-items: flex-start; gap: 1rem; }
       h1 { font-size: 1.8rem; }
-      .language-switcher { align-self: flex-start; }
+      .header-actions { margin-left: auto; }
       .main-controls, .dictation-controls { flex-direction: column; gap: 1rem; align-items: stretch; }
       .flashcard { width: 100%; max-width: 300px; }
       .mode-selection-container { flex-direction: column; align-items: center; }
@@ -577,15 +736,18 @@
 <body>
   <div class="container" id="appContainer">
     <header class="app-header">
-      <div class="header-top">
+      <div class="header-main">
         <h1 data-translate-key="appTitle">Flipcard Study</h1>
-        <div class="language-switcher">
-          <button class="lang-button" data-lang="en">English</button>
-          <button class="lang-button" data-lang="zh-HK">繁體中文</button>
+        <div class="header-actions">
+            <div class="language-switcher">
+              <button class="lang-button" data-lang="en">EN</button>
+              <button class="lang-button" data-lang="zh-HK">中</button>
+            </div>
+            <button id="historyButton" class="icon-btn" aria-label="Open study history">🕒</button>
+            <button id="settingsButton" class="icon-btn" aria-label="Open settings">⚙️</button>
         </div>
       </div>
       <p data-translate-key="appDescription">Generate study cards for your HKDSE prep or run vocabulary dictation drills. Pick a mode to get started!</p>
-      <input type="password" id="apiKeyInput" data-translate-key="apiKeyPlaceholder" placeholder="Enter your Google AI API Key here">
     </header>
 
     <main id="mainContent">
@@ -607,14 +769,18 @@
           <button class="back-button" aria-label="Back to mode selection">←</button>
           <h2 data-translate-key="studyModeTitle">Study Mode</h2>
         </div>
-        <textarea id="topicInput" data-translate-key="studyTopicPlaceholder" placeholder="Enter a topic, e.g., 'Photosynthesis' or 'Medieval Europe'"></textarea>
+        <textarea id="topicInput" class="text-input" data-translate-key="studyTopicPlaceholder" placeholder="Enter a topic, e.g., 'Photosynthesis' or 'Medieval Europe'"></textarea>
         <div class="main-controls">
           <button id="generateButton">
             <span class="button-text" data-translate-key="generateButton">Generate Flashcards</span>
             <span class="spinner hidden"></span>
           </button>
-          <button id="importButton" data-translate-key="importButton">Import Cards</button>
-          <button id="exportButton" class="hidden" data-translate-key="exportButton">Export Cards</button>
+          <button id="generateFromNoteButton">
+             <span class="button-text" data-translate-key="generateFromNoteButton">Generate from Note</span>
+             <span class="spinner hidden"></span>
+          </button>
+          <button id="importButton" class="secondary" data-translate-key="importButton">Import Cards</button>
+          <button id="exportButton" class="secondary hidden" data-translate-key="exportButton">Export Cards</button>
         </div>
          <div class="study-options-container hidden" id="studyOptionsContainer">
            <button class="study-option-btn active" data-mode="study" data-translate-key="studyModeLabel">Study</button>
@@ -654,7 +820,45 @@
     <!-- Dictation practice/results will be injected here -->
   </div>
 
+  <!-- MODALS -->
+  <div id="apiKeyModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 data-translate-key="settingsTitle">Settings</h2>
+        <button class="close-modal-btn" data-target-modal="apiKeyModal" aria-label="Close settings">×</button>
+      </div>
+      <div class="modal-body">
+        <p data-translate-key="apiKeyModalDescription">Your Google AI API Key is stored only in your browser's local storage.</p>
+        <p class="api-key-tip">
+          <span data-translate-key="apiKeyTip">Tip: Get your API key from </span>
+          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.
+        </p>
+        <input type="password" id="apiKeyModalInput" class="text-input" data-translate-key="apiKeyPlaceholder" placeholder="Enter your Google AI API Key here">
+      </div>
+      <div class="modal-footer">
+        <button id="saveApiKeyButton" data-translate-key="saveButton">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="historyModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 data-translate-key="historyTitle">Study History</h2>
+        <button class="close-modal-btn" data-target-modal="historyModal" aria-label="Close history">×</button>
+      </div>
+      <div class="modal-body" id="historyModalBody">
+        <!-- History items will be injected here -->
+      </div>
+    </div>
+  </div>
+
   <input type="file" id="importInput" class="hidden" accept=".json">
+  <input type="file" id="noteInput" class="hidden" accept=".txt,.md,.pdf,.doc,.docx,.ppt,.pptx,image/*">
+  
+  <footer>
+    Copyright © 2025 Hugo Wong. All rights reserved.
+  </footer>
 
   <script type="module">
     import { GoogleGenAI, Type } from "@google/genai";
@@ -666,13 +870,14 @@
             appDescription: "Generate study cards for your HKDSE prep or run vocabulary dictation drills. Pick a mode to get started!",
             apiKeyPlaceholder: "Enter your Google AI API Key here",
             studyModeTitle: "📚 Study Mode",
-            studyModeDescription: "Enter a topic and AI will generate flashcards and a quiz for you.",
+            studyModeDescription: "Enter a topic, upload a note, and AI will generate flashcards for you.",
             dictationModeTitle: "🎧 Dictation Mode",
             dictationModeDescription: "Input your vocabulary list and test yourself with audio dictation.",
             studyTopicPlaceholder: "Enter a topic, e.g., 'Photosynthesis' or 'Medieval Europe'",
             generateButton: "Generate Flashcards",
-            importButton: "Import Cards",
-            exportButton: "Export Cards",
+            generateFromNoteButton: "Generate from Note",
+            importButton: "Import",
+            exportButton: "Export",
             studyModeLabel: "Study",
             quizModeLabel: "Quiz",
             matchModeLabel: "Match",
@@ -680,10 +885,13 @@
             translateButton: "Translate to Chinese",
             startDictationButton: "Start Dictation",
             statusGenerating: "Generating flashcards for you...",
+            statusAnalyzing: "Analyzing your file...",
             statusTranslating: "Translating your list...",
             statusParsing: "Cleaning up your list...",
-            errorApiKey: "Please enter your Google AI API Key.",
+            errorApiKey: "Please set your Google AI API Key in Settings (⚙️).",
             errorTopic: "Please enter a topic.",
+            errorNoFile: "Please select a file.",
+            errorFileRead: "Could not read the file.",
             errorNoCards: "Could not generate flashcards. Please try a different topic.",
             errorGeneral: "An error occurred: ",
             errorUnknown: "Unknown error",
@@ -717,37 +925,50 @@
             matchGameComplete: "Well done!",
             playAgainButton: "Play Again",
             returnToStudyButton: "Return to Study",
+            settingsTitle: "Settings",
+            apiKeyModalDescription: "Your Google AI API Key is stored only in your browser's local storage.",
+            apiKeyTip: "Tip: Get your API key from ",
+            saveButton: "Save",
+            historyTitle: "Study History",
+            noHistoryMessage: "You have no saved study sets yet.",
+            loadButton: "Load",
+            deleteButton: "Delete",
+            cardsLabel: "cards"
         },
         'zh-HK': {
             appTitle: "溫習卡學習",
             appDescription: "為您的香港中學文憑考試 (HKDSE) 生成學習卡或進行詞彙聽寫練習。選擇一種模式即可開始！",
             apiKeyPlaceholder: "在此處輸入您的 Google AI API Key",
             studyModeTitle: "📚 學習模式",
-            studyModeDescription: "輸入一個主題，AI會為您生成學習卡和測驗。",
+            studyModeDescription: "輸入主題、上傳筆記，AI 將為您生成溫習卡。",
             dictationModeTitle: "🎧 聽寫模式",
             dictationModeDescription: "輸入您的詞彙列表，並通過聽寫練習來測試自己。",
             studyTopicPlaceholder: "輸入主題，例如：“光合作用”或“中世紀歐洲”",
-            generateButton: "生成學習卡",
-            importButton: "導入學習卡",
-            exportButton: "導出學習卡",
+            generateButton: "生成溫習卡",
+            generateFromNoteButton: "從筆記生成",
+            importButton: "導入",
+            exportButton: "導出",
             studyModeLabel: "學習",
             quizModeLabel: "測驗",
             matchModeLabel: "配對",
             dictationListPlaceholder: "在此處輸入您的詞彙列表。任何格式都可以 - AI會為您整理。",
             translateButton: "翻譯為中文",
             startDictationButton: "開始聽寫",
-            statusGenerating: "正在為您生成學習卡...",
+            statusGenerating: "正在為您生成溫習卡...",
+            statusAnalyzing: "正在分析您的檔案...",
             statusTranslating: "正在翻譯您的列表...",
             statusParsing: "正在整理您的列表...",
-            errorApiKey: "請輸入您的 Google AI API Key。",
+            errorApiKey: "請在設定 (⚙️) 中設置您的 Google AI API Key。",
             errorTopic: "請輸入一個主題。",
+            errorNoFile: "請選擇一個文件。",
+            errorFileRead: "無法讀取文件。",
             errorNoCards: "無法生成學習卡。請嘗試不同的主題或重新措辭。",
             errorGeneral: "生成時發生錯誤: ",
             errorUnknown: "未知錯誤",
             errorImport: "導入失敗: ",
-            errorNoExport: "沒有可導出的學習卡。",
+            errorNoExport: "沒有可導出的溫習卡。",
             errorImportInvalidJSON: "導入失敗：文件不是有效的JSON格式。",
-            errorImportInvalidStructure: "導入失敗：每張學習卡都必須包含'term'和'definition'。",
+            errorImportInvalidStructure: "導入失敗：每張溫習卡都必須包含'term'和'definition'。",
             errorSpeechSynthesis: "您的瀏覽器不支持語音合成。",
             errorDictationList: "請輸入詞彙列表。",
             errorNoValidWords: "您的列表中未找到有效詞彙。",
@@ -774,13 +995,21 @@
             matchGameComplete: "完成！",
             playAgainButton: "再玩一次",
             returnToStudyButton: "返回學習",
+            settingsTitle: "設定",
+            apiKeyModalDescription: "您的 Google AI API Key 僅儲存在您瀏覽器的本地儲存空間中。",
+            apiKeyTip: "提示：您可以從此處獲取您的 API Key ",
+            saveButton: "儲存",
+            historyTitle: "學習記錄",
+            noHistoryMessage: "您還沒有已儲存的學習集。",
+            loadButton: "載入",
+            deleteButton: "刪除",
+            cardsLabel: "張卡"
         }
     };
     let currentLanguage = 'en';
 
     // --- DOM Elements ---
     const appContainer = document.getElementById('appContainer');
-    const apiKeyInput = document.getElementById('apiKeyInput');
     const statusMessage = document.getElementById('statusMessage');
     const contentArea = document.getElementById('content-area');
 
@@ -797,18 +1026,31 @@
     // Study Mode Elements
     const topicInput = document.getElementById('topicInput');
     const generateButton = document.getElementById('generateButton');
+    const generateFromNoteButton = document.getElementById('generateFromNoteButton');
     const importButton = document.getElementById('importButton');
     const exportButton = document.getElementById('exportButton');
     const importInput = document.getElementById('importInput');
+    const noteInput = document.getElementById('noteInput');
     const studyOptionsContainer = document.getElementById('studyOptionsContainer');
     
     // Dictation Mode Elements
     const dictationListInput = document.getElementById('dictationListInput');
     const startDictationButton = document.getElementById('startDictationButton');
     const translateButton = document.getElementById('translateButton');
+    
+    // Modals
+    const apiKeyModal = document.getElementById('apiKeyModal');
+    const apiKeyModalInput = document.getElementById('apiKeyModalInput');
+    const saveApiKeyButton = document.getElementById('saveApiKeyButton');
+    const historyModal = document.getElementById('historyModal');
+    const historyModalBody = document.getElementById('historyModalBody');
+    const settingsButton = document.getElementById('settingsButton');
+    const historyButton = document.getElementById('historyButton');
+
 
     // --- State ---
     let ai = null;
+    let apiKey = '';
     let flashcards = [];
     let currentStudyMode = 'study';
     let quizIndex = 0;
@@ -821,17 +1063,16 @@
     // --- Utility Functions ---
     const getTranslation = (key) => translations[currentLanguage][key] || key;
 
-    function handleError(key, message = '') {
-      statusMessage.textContent = getTranslation(key) + message;
-      statusMessage.classList.add('error');
-    }
-
-    function showStatus(key, isError = false) {
+    function showStatus(key, type = 'info') {
       statusMessage.textContent = key ? getTranslation(key) : '';
-      statusMessage.classList.toggle('error', isError);
+      statusMessage.className = 'status-message';
+      if (type) {
+        statusMessage.classList.add(type);
+      }
     }
     
     function toggleLoading(button, isLoading) {
+        if (!button) return;
         button.disabled = isLoading;
         const buttonText = button.querySelector('.button-text');
         const spinner = button.querySelector('.spinner');
@@ -843,6 +1084,13 @@
             spinner?.classList.add('hidden');
         }
     }
+
+    const fileToBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = error => reject(error);
+    });
 
     // --- I18n Functions ---
     function setLanguage(lang) {
@@ -875,14 +1123,13 @@
 
     // --- Initialization ---
     function initialize() {
+        loadApiKey();
         setupEventListeners();
         updateButtonStates();
         initializeLanguage();
     }
     
     function setupEventListeners() {
-        apiKeyInput.addEventListener('input', updateButtonStates);
-        
         document.querySelectorAll('.lang-button').forEach(btn => {
             btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
         });
@@ -897,6 +1144,8 @@
         });
         
         generateButton.addEventListener('click', generateFlashcards);
+        generateFromNoteButton.addEventListener('click', () => noteInput.click());
+        noteInput.addEventListener('change', handleNoteUpload);
         importButton.addEventListener('click', () => importInput.click());
         exportButton.addEventListener('click', exportFlashcards);
         importInput.addEventListener('change', importFlashcards);
@@ -909,16 +1158,35 @@
         
         startDictationButton.addEventListener('click', startDictation);
         translateButton.addEventListener('click', translateVocabulary);
+
+        // Modal listeners
+        settingsButton.addEventListener('click', () => toggleModal('apiKeyModal', true));
+        historyButton.addEventListener('click', () => {
+            renderHistoryModal();
+            toggleModal('historyModal', true);
+        });
+        saveApiKeyButton.addEventListener('click', handleSaveApiKey);
+        document.querySelectorAll('.close-modal-btn').forEach(btn => {
+            btn.addEventListener('click', () => toggleModal(btn.dataset.targetModal, false));
+        });
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    toggleModal(overlay.id, false);
+                }
+            });
+        });
     }
     
     function updateButtonStates() {
-      const hasApiKey = apiKeyInput.value.trim().length > 0;
+      const hasApiKey = apiKey.trim().length > 0;
       generateButton.disabled = !hasApiKey;
+      generateFromNoteButton.disabled = !hasApiKey;
       startDictationButton.disabled = !hasApiKey;
       translateButton.disabled = !hasApiKey;
     }
 
-    // --- View Management ---
+    // --- View & Modal Management ---
     function showView(viewName) {
         [modeSelectionContainer, studyModeContainer, dictationModeContainer].forEach(v => v.classList.add('hidden'));
         contentArea.innerHTML = '';
@@ -946,40 +1214,134 @@
             dictationPage.classList.remove('visible');
         }
     }
+    
+    function toggleModal(modalId, show) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.toggle('visible', show);
+        }
+    }
 
-    // --- AI Initialization ---
+    // --- API Key & AI Initialization ---
+    function loadApiKey() {
+        apiKey = localStorage.getItem('googleGenAiApiKey') || '';
+        apiKeyModalInput.value = apiKey;
+        if (apiKey) {
+            initializeAi();
+        }
+    }
+
+    function handleSaveApiKey() {
+        apiKey = apiKeyModalInput.value.trim();
+        localStorage.setItem('googleGenAiApiKey', apiKey);
+        initializeAi();
+        updateButtonStates();
+        toggleModal('apiKeyModal', false);
+    }
+
     function initializeAi() {
-        const apiKey = apiKeyInput.value.trim();
         if (!apiKey) {
-            handleError('errorApiKey');
+            ai = null;
             return false;
         }
-        if (!ai || ai.apiKey !== apiKey) {
-            try {
-                ai = new GoogleGenAI({ apiKey });
-            } catch(e) {
-                handleError('errorApiKey');
-                return false;
-            }
+        try {
+            ai = new GoogleGenAI({ apiKey });
+            return true;
+        } catch(e) {
+            showStatus('errorApiKey', 'error');
+            return false;
         }
-        return true;
     }
     
+    // --- History Management ---
+    function getHistory() {
+        return JSON.parse(localStorage.getItem('studyHistory') || '[]');
+    }
+
+    function saveToHistory(topic, cards) {
+        const history = getHistory();
+        const newEntry = {
+            id: Date.now(),
+            topic,
+            date: new Date().toISOString(),
+            cards
+        };
+        history.unshift(newEntry); // Add to the beginning
+        if (history.length > 50) { // Limit history size
+            history.pop();
+        }
+        localStorage.setItem('studyHistory', JSON.stringify(history));
+    }
+
+    function deleteFromHistory(id) {
+        let history = getHistory();
+        history = history.filter(item => item.id !== id);
+        localStorage.setItem('studyHistory', JSON.stringify(history));
+        renderHistoryModal();
+    }
+
+    function loadFromHistory(id) {
+        const history = getHistory();
+        const entry = history.find(item => item.id === id);
+        if (entry) {
+            flashcards = entry.cards;
+            topicInput.value = entry.topic;
+            showView('study');
+            studyOptionsContainer.classList.remove('hidden');
+            exportButton.classList.remove('hidden');
+            handleStudyModeChange('study');
+            toggleModal('historyModal', false);
+        }
+    }
+
+    function renderHistoryModal() {
+        const history = getHistory();
+        if (history.length === 0) {
+            historyModalBody.innerHTML = `<p class="no-history">${getTranslation('noHistoryMessage')}</p>`;
+            return;
+        }
+        historyModalBody.innerHTML = `<ul class="history-list"></ul>`;
+        const list = historyModalBody.querySelector('.history-list');
+        history.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            const date = new Date(item.date).toLocaleDateString(currentLanguage, { year: 'numeric', month: 'short', day: 'numeric' });
+            li.innerHTML = `
+                <div class="history-item-info">
+                    <span class="history-item-topic">${item.topic}</span>
+                    <span class="history-item-meta">${date} - ${item.cards.length} ${getTranslation('cardsLabel')}</span>
+                </div>
+                <div class="history-item-actions">
+                    <button class="load-history-btn" data-id="${item.id}">${getTranslation('loadButton')}</button>
+                    <button class="delete-history-btn secondary" data-id="${item.id}">${getTranslation('deleteButton')}</button>
+                </div>`;
+            list.appendChild(li);
+        });
+
+        list.querySelectorAll('.load-history-btn').forEach(btn => {
+            btn.addEventListener('click', () => loadFromHistory(Number(btn.dataset.id)));
+        });
+        list.querySelectorAll('.delete-history-btn').forEach(btn => {
+            btn.addEventListener('click', () => deleteFromHistory(Number(btn.dataset.id)));
+        });
+    }
+
     function resetStudyMode() {
         flashcards = [];
         studyOptionsContainer.classList.add('hidden');
         exportButton.classList.add('hidden');
         currentStudyMode = 'study';
         contentArea.innerHTML = '';
+        topicInput.value = '';
     }
 
     // --- Study Mode Functions ---
     async function generateFlashcards() {
-      if (!initializeAi()) return;
+      if (!initializeAi()) { showStatus('errorApiKey', 'error'); return; }
       
       const topic = topicInput.value.trim();
       if (!topic) {
-        handleError('errorTopic');
+        showStatus('errorTopic', 'error');
         return;
       }
 
@@ -1001,25 +1363,88 @@
 
         if (parsedFlashcards && parsedFlashcards.length > 0) {
           flashcards = parsedFlashcards;
+          saveToHistory(topic, flashcards);
           showStatus('');
           studyOptionsContainer.classList.remove('hidden');
           exportButton.classList.remove('hidden');
-          updateButtonStates();
           handleStudyModeChange('study');
         } else {
-          handleError('errorNoCards');
+          showStatus('errorNoCards', 'error');
         }
       } catch (error) {
         console.error('Error generating content:', error);
-        handleError('errorGeneral', error.message || getTranslation('errorUnknown'));
+        showStatus(getTranslation('errorGeneral') + (error.message || getTranslation('errorUnknown')), 'error');
       } finally {
         toggleLoading(generateButton, false);
       }
     }
 
+    async function handleNoteUpload(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            showStatus('errorNoFile', 'error');
+            return;
+        }
+        
+        if (!initializeAi()) { showStatus('errorApiKey', 'error'); return; }
+
+        showStatus('statusAnalyzing');
+        toggleLoading(generateFromNoteButton, true);
+        resetStudyMode();
+        const topic = file.name;
+        topicInput.value = topic;
+        
+        try {
+            let contents;
+            if (file.type.startsWith('text/')) {
+                const textContent = await file.text();
+                const prompt = `Based on the following notes about "${topic}", create a set of flashcards. Each flashcard should have a 'term' and a 'definition'. The content should be extracted and summarized from the notes provided. Notes: """${textContent}"""`;
+                contents = { parts: [{ text: prompt }] };
+            } else {
+                // Handle images, PDFs, etc.
+                const base64Data = await fileToBase64(file);
+                const filePart = {
+                    inlineData: {
+                        mimeType: file.type,
+                        data: base64Data,
+                    },
+                };
+                const textPart = { text: `Extract key terms and definitions from the provided file (${topic}) to create flashcards suitable for an HKDSE student.` };
+                contents = { parts: [filePart, textPart] };
+            }
+
+             const result = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { term: { type: Type.STRING }, definition: { type: Type.STRING } } } }
+                }
+            });
+            const parsedFlashcards = JSON.parse(result.text);
+
+            if (parsedFlashcards && parsedFlashcards.length > 0) {
+                flashcards = parsedFlashcards;
+                saveToHistory(topic, flashcards);
+                showStatus('');
+                studyOptionsContainer.classList.remove('hidden');
+                exportButton.classList.remove('hidden');
+                handleStudyModeChange('study');
+            } else {
+                showStatus('errorNoCards', 'error');
+            }
+        } catch (error) {
+            console.error('Error generating from note:', error);
+            showStatus(getTranslation('errorGeneral') + (error.message || getTranslation('errorUnknown')), 'error');
+        } finally {
+            toggleLoading(generateFromNoteButton, false);
+            event.target.value = ''; // Reset file input
+        }
+    }
+
     function exportFlashcards() {
       if (flashcards.length === 0) {
-        handleError('errorNoExport');
+        showStatus('errorNoExport', 'error');
         return;
       }
       const topic = topicInput.value.trim().replace(/\s+/g, '_') || 'flashcards';
@@ -1053,14 +1478,15 @@
             throw new Error(getTranslation('errorImportInvalidStructure'));
           }
           flashcards = importedData;
+          const topic = file.name.replace('.json', '') || 'Imported Flashcards';
+          topicInput.value = topic;
+          saveToHistory(topic, flashcards);
           showStatus('');
           studyOptionsContainer.classList.remove('hidden');
           exportButton.classList.remove('hidden');
-          updateButtonStates();
-          topicInput.value = 'Imported Flashcards';
           handleStudyModeChange('study');
         } catch (error) {
-          handleError('errorImport', error.message);
+          showStatus(getTranslation('errorImport') + error.message, 'error');
         } finally {
           event.target.value = '';
         }
@@ -1131,10 +1557,10 @@
     }
     
     async function checkQuizAnswer(userAnswer, card) {
-        if (!userAnswer.trim() || !initializeAi()) return;
+        if (!userAnswer.trim() || !initializeAi()) { showStatus('errorApiKey', 'error'); return; }
         const submitBtn = document.getElementById('submitAnswerBtn');
-        toggleLoading(submitBtn, true);
-        submitBtn.innerHTML = `<span class="spinner"></span>`;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="spinner"></span> <span data-translate-key="evaluatingAnswer">${getTranslation('evaluatingAnswer')}</span>`;
         const feedbackContainer = document.getElementById('quizFeedbackContainer');
         feedbackContainer.innerHTML = '';
         
@@ -1151,14 +1577,14 @@
             else if (score.toUpperCase() === 'PARTIAL') { scoreClass = 'partial'; quizScore += 1; }
 
             feedbackContainer.innerHTML = `<div class="quiz-feedback ${scoreClass}"><strong class="${scoreClass}">${score.toUpperCase()} (+${score.toUpperCase() === 'CORRECT' ? 2 : (score.toUpperCase() === 'PARTIAL' ? 1 : 0)} pts)</strong><p><strong>評價:</strong> ${evaluation}</p><p><strong>正確答案:</strong> ${card.definition}</p></div>`;
-            toggleLoading(submitBtn, false);
-            submitBtn.textContent = getTranslation('nextQuestionButton');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = getTranslation('nextQuestionButton');
             submitBtn.onclick = () => { quizIndex++; renderQuizMode(); };
         } catch (error) {
             console.error('Error evaluating answer:', error);
             feedbackContainer.innerHTML = `<p class="error">評估答案時出錯，請重試。</p>`;
-            toggleLoading(submitBtn, false);
-            submitBtn.textContent = getTranslation('submitAnswerButton');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = getTranslation('submitAnswerButton');
         }
     }
 
@@ -1247,9 +1673,9 @@
 
     // --- Dictation Mode AI Functions ---
     async function translateVocabulary() {
-        if (!initializeAi()) return;
+        if (!initializeAi()) { showStatus('errorApiKey', 'error'); return; }
         const list = dictationListInput.value.trim();
-        if (!list) { handleError('errorDictationList'); return; }
+        if (!list) { showStatus('errorDictationList', 'error'); return; }
 
         showStatus('statusTranslating');
         toggleLoading(translateButton, true);
@@ -1266,16 +1692,16 @@
             }
         } catch(error) {
             console.error('Error translating list:', error);
-            handleError('errorGeneral', error.message || getTranslation('errorUnknown'));
+            showStatus(getTranslation('errorGeneral') + (error.message || getTranslation('errorUnknown')), 'error');
         } finally {
             toggleLoading(translateButton, false);
         }
     }
 
     async function parseVocabularyList() {
-        if (!initializeAi()) return null;
+        if (!initializeAi()) { return null; }
         const list = dictationListInput.value.trim();
-        if (!list) { handleError('errorDictationList'); return null; }
+        if (!list) { showStatus('errorDictationList', 'error'); return null; }
 
         showStatus('statusParsing');
         toggleLoading(startDictationButton, true);
@@ -1292,7 +1718,7 @@
             return null;
         } catch(error) {
             console.error('Error parsing list:', error);
-            handleError('errorGeneral', error.message || getTranslation('errorUnknown'));
+            showStatus(getTranslation('errorGeneral') + (error.message || getTranslation('errorUnknown')), 'error');
             return null;
         } finally {
             toggleLoading(startDictationButton, false);
@@ -1302,9 +1728,9 @@
 
     // --- Dictation Mode Functions ---
     async function startDictation() {
-        if (!('speechSynthesis' in window)) { handleError('errorSpeechSynthesis'); return; }
+        if (!('speechSynthesis' in window)) { showStatus('errorSpeechSynthesis', 'error'); return; }
         const parsedWords = await parseVocabularyList();
-        if (!parsedWords || parsedWords.length === 0) { handleError('errorNoValidWords'); return; }
+        if (!parsedWords || parsedWords.length === 0) { showStatus('errorNoValidWords', 'error'); return; }
         
         dictationWords = parsedWords;
         userAnswers = [];
