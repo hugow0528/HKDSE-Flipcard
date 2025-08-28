@@ -386,24 +386,32 @@
     
     button .button-text.hidden { display: none; }
     
-    .mode-switcher {
+    .study-options-container {
       display: flex;
-      align-items: center;
+      justify-content: center;
       gap: 0.5rem;
-      font-size: 0.9rem;
       background-color: var(--bg-color);
       padding: 0.5rem;
       border-radius: 8px;
+      margin: 1rem auto 0;
     }
 
-    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 26px; }
-    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: var(--accent-color); }
-    input:checked:disabled + .slider { background-color: #adb5bd; }
-    input:checked + .slider:before { transform: translateX(24px); }
-    #mode-label { font-weight: 500; min-width: 80px; text-align: left; }
+    .study-option-btn {
+      background: none;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .study-option-btn.active {
+      background-color: var(--surface-color);
+      color: var(--accent-color);
+      box-shadow: 0 2px 5px var(--shadow-light);
+      border-color: var(--border-color);
+    }
     
     /* DICTATION PAGE STYLES */
     .dictation-page-container {
@@ -430,6 +438,7 @@
         pointer-events: auto;
     }
     .dictation-page-content {
+        position: relative;
         background-color: var(--surface-color);
         padding: 2.5rem;
         border-radius: 16px;
@@ -437,6 +446,11 @@
         width: 100%;
         max-width: 600px;
         text-align: center;
+    }
+    .dictation-page-back-button {
+        position: absolute;
+        top: 1.25rem;
+        left: 1.25rem;
     }
     .dictation-translation {
         font-size: 1.2rem;
@@ -450,6 +464,69 @@
         min-height: 1.5em;
     }
 
+    /* MATCH GAME STYLES */
+    .match-game-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 1rem;
+        max-width: 700px;
+        margin: 1rem auto 0;
+        perspective: 1000px;
+    }
+    .match-card {
+        background-color: var(--surface-color);
+        border-radius: 8px;
+        height: 100px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 0.5rem;
+        cursor: pointer;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.6s, box-shadow 0.3s;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px var(--shadow-light);
+    }
+    .match-card-content {
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        transform: rotateY(180deg);
+        font-size: 0.9rem;
+    }
+    .match-card::before { /* Card back */
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: var(--accent-color);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        border-radius: 8px;
+        transition: background-color 0.2s;
+    }
+     .match-card:hover::before {
+        background-color: var(--accent-hover);
+    }
+    .match-card.flipped {
+        transform: rotateY(180deg);
+    }
+    .match-card.matched {
+        cursor: default;
+        border-color: var(--correct-color);
+        box-shadow: 0 0 10px rgba(25, 135, 84, 0.3);
+        transform: rotateY(180deg);
+    }
+    .match-card.mismatched {
+      border-color: var(--error-color);
+    }
+    .match-card.flipped.matched::before {
+        background-color: #e8f5e9;
+    }
+    .match-completion-message {
+        margin-top: 2rem;
+    }
+
     @media (max-width: 768px) {
       body { padding: 1rem 0.5rem; }
       .container { padding: 1.5rem; }
@@ -458,8 +535,42 @@
       .language-switcher { align-self: flex-start; }
       .main-controls, .dictation-controls { flex-direction: column; gap: 1rem; align-items: stretch; }
       .flashcard { width: 100%; max-width: 300px; }
+      .mode-selection-container { flex-direction: column; align-items: center; }
       .dictation-page-content { padding: 1.5rem; }
       .view.hidden { width: calc(100% - 3rem); }
+
+      /* Responsive Dictation Table */
+      .dictation-results-table thead {
+        display: none;
+      }
+      .dictation-results-table, .dictation-results-table tbody, .dictation-results-table tr, .dictation-results-table td {
+        display: block;
+        width: 100%;
+      }
+      .dictation-results-table tr {
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.5rem;
+      }
+      .dictation-results-table td {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem;
+        border: none;
+        text-align: right;
+        align-items: center;
+      }
+      .dictation-results-table td::before {
+        content: attr(data-label);
+        font-weight: 500;
+        text-align: left;
+        margin-right: 1rem;
+        color: var(--text-primary);
+      }
+      .dictation-results-table td:last-child {
+        font-size: 1.25rem;
+      }
     }
   </style>
 </head>
@@ -505,14 +616,10 @@
           <button id="importButton" data-translate-key="importButton">Import Cards</button>
           <button id="exportButton" class="hidden" data-translate-key="exportButton">Export Cards</button>
         </div>
-         <div class="main-controls">
-            <div class="mode-switcher hidden" id="modeSwitcher">
-              <label class="toggle-switch">
-                <input type="checkbox" id="modeToggle">
-                <span class="slider"></span>
-              </label>
-              <span id="mode-label" data-translate-key="studyModeLabel">Study Mode</span>
-            </div>
+         <div class="study-options-container hidden" id="studyOptionsContainer">
+           <button class="study-option-btn active" data-mode="study" data-translate-key="studyModeLabel">Study</button>
+           <button class="study-option-btn" data-mode="quiz" data-translate-key="quizModeLabel">Quiz</button>
+           <button class="study-option-btn" data-mode="match" data-translate-key="matchModeLabel">Match</button>
          </div>
       </div>
       
@@ -566,8 +673,9 @@
             generateButton: "Generate Flashcards",
             importButton: "Import Cards",
             exportButton: "Export Cards",
-            studyModeLabel: "Study Mode",
-            quizModeLabel: "Quiz Mode",
+            studyModeLabel: "Study",
+            quizModeLabel: "Quiz",
+            matchModeLabel: "Match",
             dictationListPlaceholder: "Enter your vocabulary list here. Any format is okay - AI will clean it up for you.",
             translateButton: "Translate to Chinese",
             startDictationButton: "Start Dictation",
@@ -581,7 +689,8 @@
             errorUnknown: "Unknown error",
             errorImport: "Import failed: ",
             errorNoExport: "No cards to export.",
-            errorInvalidFile: "Invalid file format.",
+            errorImportInvalidJSON: "Import failed: The file is not a valid JSON.",
+            errorImportInvalidStructure: "Import failed: Each flashcard must have a 'term' and a 'definition'.",
             errorSpeechSynthesis: "Your browser does not support speech synthesis.",
             errorDictationList: "Please enter a vocabulary list.",
             errorNoValidWords: "No valid words found in your list.",
@@ -603,7 +712,11 @@
             status: "Status",
             practiceAgainButton: "Practice Again",
             backToMenuButton: "Back to Main Menu",
+            backButtonLabel: "Back",
             feedbackCorrectAnswerIs: "The correct answer is:",
+            matchGameComplete: "Well done!",
+            playAgainButton: "Play Again",
+            returnToStudyButton: "Return to Study",
         },
         'zh-HK': {
             appTitle: "溫習卡學習",
@@ -617,8 +730,9 @@
             generateButton: "生成學習卡",
             importButton: "導入學習卡",
             exportButton: "導出學習卡",
-            studyModeLabel: "學習模式",
-            quizModeLabel: "測驗模式",
+            studyModeLabel: "學習",
+            quizModeLabel: "測驗",
+            matchModeLabel: "配對",
             dictationListPlaceholder: "在此處輸入您的詞彙列表。任何格式都可以 - AI會為您整理。",
             translateButton: "翻譯為中文",
             startDictationButton: "開始聽寫",
@@ -632,7 +746,8 @@
             errorUnknown: "未知錯誤",
             errorImport: "導入失敗: ",
             errorNoExport: "沒有可導出的學習卡。",
-            errorInvalidFile: "無效的文件格式。",
+            errorImportInvalidJSON: "導入失敗：文件不是有效的JSON格式。",
+            errorImportInvalidStructure: "導入失敗：每張學習卡都必須包含'term'和'definition'。",
             errorSpeechSynthesis: "您的瀏覽器不支持語音合成。",
             errorDictationList: "請輸入詞彙列表。",
             errorNoValidWords: "您的列表中未找到有效詞彙。",
@@ -654,7 +769,11 @@
             status: "狀態",
             practiceAgainButton: "再次練習",
             backToMenuButton: "返回主菜單",
+            backButtonLabel: "返回",
             feedbackCorrectAnswerIs: "正確答案是：",
+            matchGameComplete: "完成！",
+            playAgainButton: "再玩一次",
+            returnToStudyButton: "返回學習",
         }
     };
     let currentLanguage = 'en';
@@ -664,7 +783,6 @@
     const apiKeyInput = document.getElementById('apiKeyInput');
     const statusMessage = document.getElementById('statusMessage');
     const contentArea = document.getElementById('content-area');
-    const mainContent = document.getElementById('mainContent');
 
     // View Containers
     const modeSelectionContainer = document.getElementById('modeSelectionContainer');
@@ -682,9 +800,7 @@
     const importButton = document.getElementById('importButton');
     const exportButton = document.getElementById('exportButton');
     const importInput = document.getElementById('importInput');
-    const modeSwitcher = document.getElementById('modeSwitcher');
-    const modeToggle = document.getElementById('modeToggle');
-    const modeLabel = document.getElementById('mode-label');
+    const studyOptionsContainer = document.getElementById('studyOptionsContainer');
     
     // Dictation Mode Elements
     const dictationListInput = document.getElementById('dictationListInput');
@@ -705,8 +821,8 @@
     // --- Utility Functions ---
     const getTranslation = (key) => translations[currentLanguage][key] || key;
 
-    function handleError(key) {
-      statusMessage.textContent = getTranslation(key);
+    function handleError(key, message = '') {
+      statusMessage.textContent = getTranslation(key) + message;
       statusMessage.classList.add('error');
     }
 
@@ -720,11 +836,11 @@
         const buttonText = button.querySelector('.button-text');
         const spinner = button.querySelector('.spinner');
         if (isLoading) {
-            buttonText.classList.add('hidden');
-            spinner.classList.remove('hidden');
+            buttonText?.classList.add('hidden');
+            spinner?.classList.remove('hidden');
         } else {
-            buttonText.classList.remove('hidden');
-            spinner.classList.add('hidden');
+            buttonText?.classList.remove('hidden');
+            spinner?.classList.add('hidden');
         }
     }
 
@@ -749,11 +865,6 @@
         document.querySelectorAll('.lang-button').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.lang === lang);
         });
-        
-        // Update dynamic labels
-        if (flashcards.length > 0) {
-          modeLabel.textContent = currentStudyMode === 'quiz' ? getTranslation('quizModeLabel') : getTranslation('studyModeLabel');
-        }
     }
 
     function initializeLanguage() {
@@ -786,10 +897,15 @@
         });
         
         generateButton.addEventListener('click', generateFlashcards);
-        modeToggle.addEventListener('change', handleStudyModeChange);
         importButton.addEventListener('click', () => importInput.click());
         exportButton.addEventListener('click', exportFlashcards);
         importInput.addEventListener('change', importFlashcards);
+        
+        studyOptionsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('study-option-btn')) {
+                handleStudyModeChange(e.target.dataset.mode);
+            }
+        });
         
         startDictationButton.addEventListener('click', startDictation);
         translateButton.addEventListener('click', translateVocabulary);
@@ -800,7 +916,6 @@
       generateButton.disabled = !hasApiKey;
       startDictationButton.disabled = !hasApiKey;
       translateButton.disabled = !hasApiKey;
-      modeToggle.disabled = flashcards.length === 0;
     }
 
     // --- View Management ---
@@ -817,7 +932,6 @@
             default: viewToShow = modeSelectionContainer; break;
         }
         
-        // Use a short timeout to allow the 'hidden' class to apply before removing it, enabling the transition
         setTimeout(() => {
             viewToShow.classList.remove('hidden');
         }, 10);
@@ -853,11 +967,10 @@
     
     function resetStudyMode() {
         flashcards = [];
-        modeSwitcher.classList.add('hidden');
+        studyOptionsContainer.classList.add('hidden');
         exportButton.classList.add('hidden');
-        modeToggle.checked = false;
-        modeToggle.disabled = true;
         currentStudyMode = 'study';
+        contentArea.innerHTML = '';
     }
 
     // --- Study Mode Functions ---
@@ -872,7 +985,6 @@
 
       showStatus('statusGenerating');
       toggleLoading(generateButton, true);
-      contentArea.innerHTML = '';
       resetStudyMode();
 
       try {
@@ -890,16 +1002,16 @@
         if (parsedFlashcards && parsedFlashcards.length > 0) {
           flashcards = parsedFlashcards;
           showStatus('');
-          modeSwitcher.classList.remove('hidden');
+          studyOptionsContainer.classList.remove('hidden');
           exportButton.classList.remove('hidden');
           updateButtonStates();
-          renderStudyContent();
+          handleStudyModeChange('study');
         } else {
           handleError('errorNoCards');
         }
       } catch (error) {
         console.error('Error generating content:', error);
-        handleError('errorGeneral' + (error.message || getTranslation('errorUnknown')));
+        handleError('errorGeneral', error.message || getTranslation('errorUnknown'));
       } finally {
         toggleLoading(generateButton, false);
       }
@@ -930,19 +1042,25 @@
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
-          const importedData = JSON.parse(e.target.result);
+          let importedData;
+          try {
+            importedData = JSON.parse(e.target.result);
+          } catch(jsonError) {
+             throw new Error(getTranslation('errorImportInvalidJSON'));
+          }
+          
           if (!Array.isArray(importedData) || importedData.some(item => !item.term || !item.definition)) {
-            throw new Error(getTranslation('errorInvalidFile'));
+            throw new Error(getTranslation('errorImportInvalidStructure'));
           }
           flashcards = importedData;
           showStatus('');
-          modeSwitcher.classList.remove('hidden');
+          studyOptionsContainer.classList.remove('hidden');
           exportButton.classList.remove('hidden');
           updateButtonStates();
           topicInput.value = 'Imported Flashcards';
-          renderStudyContent();
+          handleStudyModeChange('study');
         } catch (error) {
-          handleError('errorImport' + error.message);
+          handleError('errorImport', error.message);
         } finally {
           event.target.value = '';
         }
@@ -950,22 +1068,31 @@
       reader.readAsText(file);
     }
 
-    function handleStudyModeChange() {
+    function handleStudyModeChange(mode) {
       if (flashcards.length === 0) return;
-      currentStudyMode = modeToggle.checked ? 'quiz' : 'study';
-      modeLabel.textContent = currentStudyMode === 'quiz' ? getTranslation('quizModeLabel') : getTranslation('studyModeLabel');
+      currentStudyMode = mode;
+      
+      document.querySelectorAll('.study-option-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
       renderStudyContent();
     }
     
     function renderStudyContent() {
         contentArea.innerHTML = '';
-        if (currentStudyMode === 'study') {
-            renderStudyMode();
-        } else {
-            quizIndex = 0;
-            quizScore = 0;
-            maxQuizScore = flashcards.length * 2;
-            renderQuizMode();
+        switch(currentStudyMode) {
+            case 'study':
+                renderStudyMode();
+                break;
+            case 'quiz':
+                quizIndex = 0;
+                quizScore = 0;
+                maxQuizScore = flashcards.length * 2;
+                renderQuizMode();
+                break;
+            case 'match':
+                renderMatchGame();
+                break;
         }
     }
 
@@ -983,7 +1110,6 @@
     }
     
     function renderQuizMode() {
-        contentArea.innerHTML = '';
         if (quizIndex >= flashcards.length) {
             renderQuizEndScreen();
             return;
@@ -1005,12 +1131,10 @@
     }
     
     async function checkQuizAnswer(userAnswer, card) {
-        if (!userAnswer.trim()) return;
-        if (!initializeAi()) return;
-
+        if (!userAnswer.trim() || !initializeAi()) return;
         const submitBtn = document.getElementById('submitAnswerBtn');
-        submitBtn.disabled = true;
-        submitBtn.textContent = getTranslation('evaluatingAnswer');
+        toggleLoading(submitBtn, true);
+        submitBtn.innerHTML = `<span class="spinner"></span>`;
         const feedbackContainer = document.getElementById('quizFeedbackContainer');
         feedbackContainer.innerHTML = '';
         
@@ -1027,14 +1151,14 @@
             else if (score.toUpperCase() === 'PARTIAL') { scoreClass = 'partial'; quizScore += 1; }
 
             feedbackContainer.innerHTML = `<div class="quiz-feedback ${scoreClass}"><strong class="${scoreClass}">${score.toUpperCase()} (+${score.toUpperCase() === 'CORRECT' ? 2 : (score.toUpperCase() === 'PARTIAL' ? 1 : 0)} pts)</strong><p><strong>評價:</strong> ${evaluation}</p><p><strong>正確答案:</strong> ${card.definition}</p></div>`;
+            toggleLoading(submitBtn, false);
             submitBtn.textContent = getTranslation('nextQuestionButton');
-            submitBtn.disabled = false;
             submitBtn.onclick = () => { quizIndex++; renderQuizMode(); };
         } catch (error) {
             console.error('Error evaluating answer:', error);
             feedbackContainer.innerHTML = `<p class="error">評估答案時出錯，請重試。</p>`;
+            toggleLoading(submitBtn, false);
             submitBtn.textContent = getTranslation('submitAnswerButton');
-            submitBtn.disabled = false;
         }
     }
 
@@ -1049,15 +1173,83 @@
             quizIndex = 0; quizScore = 0; renderQuizMode();
         });
     }
+    
+    function renderMatchGame() {
+        let gameItems = [];
+        flashcards.forEach((card, index) => {
+            gameItems.push({ text: card.term, pairId: index, type: 'term' });
+            gameItems.push({ text: card.definition, pairId: index, type: 'definition' });
+        });
+        
+        gameItems.sort(() => Math.random() - 0.5); // Shuffle
+
+        const gameContainer = document.createElement('div');
+        gameContainer.className = 'match-game-container';
+        
+        gameItems.forEach(item => {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'match-card';
+            cardEl.dataset.pairId = item.pairId;
+            cardEl.innerHTML = `<div class="match-card-content">${item.text}</div>`;
+            gameContainer.appendChild(cardEl);
+        });
+        contentArea.appendChild(gameContainer);
+
+        let flippedCards = [];
+        let matchedPairs = 0;
+        
+        gameContainer.addEventListener('click', (e) => {
+            const clickedCard = e.target.closest('.match-card');
+            if (!clickedCard || clickedCard.classList.contains('flipped') || flippedCards.length >= 2) {
+                return;
+            }
+
+            clickedCard.classList.add('flipped');
+            flippedCards.push(clickedCard);
+
+            if (flippedCards.length === 2) {
+                const [card1, card2] = flippedCards;
+                if (card1.dataset.pairId === card2.dataset.pairId) {
+                    // Match
+                    card1.classList.add('matched');
+                    card2.classList.add('matched');
+                    flippedCards = [];
+                    matchedPairs++;
+                    if (matchedPairs === flashcards.length) {
+                        setTimeout(renderMatchEndScreen, 600);
+                    }
+                } else {
+                    // Mismatch
+                    card1.classList.add('mismatched');
+                    card2.classList.add('mismatched');
+                    setTimeout(() => {
+                        card1.classList.remove('flipped', 'mismatched');
+                        card2.classList.remove('flipped', 'mismatched');
+                        flippedCards = [];
+                    }, 1000);
+                }
+            }
+        });
+    }
+
+    function renderMatchEndScreen() {
+        contentArea.innerHTML = `
+            <div class="quiz-container match-completion-message">
+                <h2>${getTranslation('matchGameComplete')}</h2>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button id="playAgainBtn">${getTranslation('playAgainButton')}</button>
+                    <button id="returnToStudyBtn" class="button secondary">${getTranslation('returnToStudyButton')}</button>
+                </div>
+            </div>`;
+        document.getElementById('playAgainBtn').addEventListener('click', renderMatchGame);
+        document.getElementById('returnToStudyBtn').addEventListener('click', () => handleStudyModeChange('study'));
+    }
 
     // --- Dictation Mode AI Functions ---
     async function translateVocabulary() {
         if (!initializeAi()) return;
         const list = dictationListInput.value.trim();
-        if (!list) {
-            handleError('errorDictationList');
-            return;
-        }
+        if (!list) { handleError('errorDictationList'); return; }
 
         showStatus('statusTranslating');
         toggleLoading(translateButton, true);
@@ -1065,21 +1257,7 @@
         try {
             const prompt = `For the following list of English vocabulary, provide a concise Traditional Chinese translation for each item suitable for HKDSE students. Here is the list:\n\n${list}`;
             const result = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: { parts: [{ text: prompt }] },
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.OBJECT,
-                            properties: {
-                                english: { type: Type.STRING },
-                                chinese: { type: Type.STRING }
-                            }
-                        }
-                    }
-                }
+                model: 'gemini-2.5-flash', contents: { parts: [{ text: prompt }] }, config: { responseMimeType: "application/json", responseSchema: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { english: { type: Type.STRING }, chinese: { type: Type.STRING } } } } }
             });
             const translations = JSON.parse(result.text);
             if (translations && translations.length > 0) {
@@ -1088,7 +1266,7 @@
             }
         } catch(error) {
             console.error('Error translating list:', error);
-            handleError('errorGeneral' + (error.message || getTranslation('errorUnknown')));
+            handleError('errorGeneral', error.message || getTranslation('errorUnknown'));
         } finally {
             toggleLoading(translateButton, false);
         }
@@ -1097,10 +1275,7 @@
     async function parseVocabularyList() {
         if (!initializeAi()) return null;
         const list = dictationListInput.value.trim();
-        if (!list) {
-            handleError('errorDictationList');
-            return null;
-        }
+        if (!list) { handleError('errorDictationList'); return null; }
 
         showStatus('statusParsing');
         toggleLoading(startDictationButton, true);
@@ -1108,21 +1283,7 @@
         try {
             const prompt = `Analyze the following text which contains a vocabulary list. For each item, identify the primary English term and its corresponding Traditional Chinese translation, if one is provided. Structure the output as a JSON array of objects, where each object has an "english" key and a "chinese" key. If no Chinese translation is found for an item, the value for "chinese" should be an empty string. Text:\n\n${list}`;
             const result = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: { parts: [{ text: prompt }] },
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.OBJECT,
-                            properties: {
-                                english: { type: Type.STRING },
-                                chinese: { type: Type.STRING }
-                            }
-                        }
-                    }
-                }
+                model: 'gemini-2.5-flash', contents: { parts: [{ text: prompt }] }, config: { responseMimeType: "application/json", responseSchema: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { english: { type: Type.STRING }, chinese: { type: Type.STRING } } } } }
             });
             const parsedList = JSON.parse(result.text);
             if (parsedList && parsedList.length > 0) {
@@ -1131,7 +1292,7 @@
             return null;
         } catch(error) {
             console.error('Error parsing list:', error);
-            handleError('errorGeneral' + (error.message || getTranslation('errorUnknown')));
+            handleError('errorGeneral', error.message || getTranslation('errorUnknown'));
             return null;
         } finally {
             toggleLoading(startDictationButton, false);
@@ -1141,16 +1302,9 @@
 
     // --- Dictation Mode Functions ---
     async function startDictation() {
-        if (!('speechSynthesis' in window)) {
-            handleError('errorSpeechSynthesis');
-            return;
-        }
-
+        if (!('speechSynthesis' in window)) { handleError('errorSpeechSynthesis'); return; }
         const parsedWords = await parseVocabularyList();
-        if (!parsedWords || parsedWords.length === 0) {
-            handleError('errorNoValidWords');
-            return;
-        }
+        if (!parsedWords || parsedWords.length === 0) { handleError('errorNoValidWords'); return; }
         
         dictationWords = parsedWords;
         userAnswers = [];
@@ -1171,6 +1325,7 @@
         const content = document.createElement('div');
         content.className = 'dictation-page-content';
         content.innerHTML = `
+            <button class="back-button dictation-page-back-button" aria-label="${getTranslation('backButtonLabel')}">←</button>
             <div class="progress-text">${getTranslation('dictationWord')} ${currentDictationIndex + 1} / ${dictationWords.length}</div>
             ${currentItem.chinese ? `<div class="dictation-translation">${currentItem.chinese}</div>` : ''}
             <button class="dictation-listen-button" aria-label="Listen to the word">🔊</button>
@@ -1182,6 +1337,7 @@
         const listenBtn = content.querySelector('.dictation-listen-button');
         const checkBtn = content.querySelector('#checkDictationBtn');
         const answerInput = content.querySelector('.dictation-answer-input');
+        const backBtn = content.querySelector('.dictation-page-back-button');
         
         answerInput.focus();
         speakWord(currentItem.english);
@@ -1191,6 +1347,10 @@
         checkBtn.addEventListener('click', checkAnswerHandler);
         answerInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') checkAnswerHandler();
+        });
+        backBtn.addEventListener('click', () => {
+          showDictationPage(false);
+          showView('dictation');
         });
     }
     
@@ -1235,24 +1395,24 @@
 
         let tableRows = userAnswers.map(answer => `
             <tr>
-                <td>${answer.word}</td>
-                <td>
+                <td data-label="${getTranslation('correctWord')}">${answer.word}</td>
+                <td data-label="${getTranslation('yourAnswer')}">
                     <span class="${answer.isCorrect ? '' : 'status-incorrect'}">${answer.userAnswer || '-'}</span>
                     ${!answer.isCorrect ? `<div class="correct-answer-feedback">${getTranslation('feedbackCorrectAnswerIs')} ${answer.word}</div>` : ''}
                 </td>
-                <td class="${answer.isCorrect ? 'status-correct' : 'status-incorrect'}">${answer.isCorrect ? '✔' : '✖'}</td>
+                <td data-label="${getTranslation('status')}" class="${answer.isCorrect ? 'status-correct' : 'status-incorrect'}">${answer.isCorrect ? '✔' : '✖'}</td>
             </tr>`).join('');
 
         content.innerHTML = `
             <h2>${getTranslation('dictationCompleteTitle')}</h2>
             <p class="progress-text">${getTranslation('finalScore')}: ${correctCount} / ${dictationWords.length}</p>
-            <div style="max-height: 30vh; overflow-y: auto;">
+            <div style="max-height: 40vh; overflow-y: auto;">
               <table class="dictation-results-table">
                   <thead><tr><th>${getTranslation('correctWord')}</th><th>${getTranslation('yourAnswer')}</th><th>${getTranslation('status')}</th></tr></thead>
                   <tbody>${tableRows}</tbody>
               </table>
             </div>
-            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: center;">
                 <button id="practiceAgainBtn">${getTranslation('practiceAgainButton')}</button>
                 <button id="backToMenuBtn" class="button secondary">${getTranslation('backToMenuButton')}</button>
             </div>`;
