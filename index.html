@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wabi-Sabi Flashcards | HKDSE Study Tool</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai@^0.12.0"
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #f8f9fa;
+      --surface-color: #ffffff;
+      --text-primary: #212529;
+      --text-secondary: #6c757d;
+      --accent-color: #4a6a8a;
+      --accent-hover: #3a556d;
+      --border-color: #dee2e6;
+      --error-color: #dc3545;
+      --correct-color: #198754;
+      --shadow-light: rgba(0, 0, 0, 0.05);
+      --shadow-medium: rgba(0, 0, 0, 0.1);
+      --font-family-en: 'Inter', sans-serif;
+      --font-family-zh: 'Noto Sans TC', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-family-en), var(--font-family-zh);
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .container {
+      background-color: var(--surface-color);
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px var(--shadow-light);
+      width: 100%;
+      max-width: 900px;
+      text-align: center;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    
+    .container.hidden {
+        opacity: 0;
+        transform: scale(0.98);
+        pointer-events: none;
+    }
+
+    .app-header {
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .language-switcher {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .lang-button {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: background-color 0.2s, color 0.2s;
+    }
+    
+    .lang-button.active {
+        background-color: var(--accent-color);
+        color: white;
+    }
+    
+    .lang-button:not(.active):hover {
+        background-color: #e9ecef;
+        color: var(--text-primary);
+    }
+
+    h1 {
+      color: var(--text-primary);
+      margin: 0;
+      font-weight: 700;
+      font-size: 2rem;
+      text-align: left;
+    }
+    
+    .app-header p {
+      text-align: left;
+      margin: 0.5rem 0 1.5rem 0;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    #apiKeyInput, textarea {
+      width: 100%;
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      font-family: inherit;
+    }
+    
+    #apiKeyInput:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(74, 106, 138, 0.2);
+    }
+    
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      margin-bottom: 1rem;
+    }
+
+    .main-controls, .dictation-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    button, .button {
+      background-color: var(--accent-color);
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      position: relative;
+    }
+    
+    .button.secondary { background-color: #6c757d; }
+    .button.secondary:hover { background-color: #5a6268; }
+
+    button:hover:not(:disabled), .button:hover:not(:disabled) {
+      background-color: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    button:disabled {
+      background-color: #adb5bd;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .status-message {
+      margin-top: 1.5rem;
+      font-weight: 500;
+      min-height: 1.5em;
+      transition: color 0.3s ease;
+    }
+
+    .status-message.error { color: var(--error-color); }
+
+    /* View Transitions */
+    .view {
+      transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+    }
+    .view.hidden {
+      opacity: 0;
+      transform: scale(0.98);
+      pointer-events: none;
+      position: absolute;
+      width: calc(100% - 5rem); /* Match container padding */
+    }
+
+    .mode-selection-container {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    
+    .mode-card {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 320px;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      text-align: left;
+    }
+    
+    .mode-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px var(--shadow-light);
+      border-color: var(--accent-color);
+    }
+    
+    .mode-card h2 { margin-top: 0; color: var(--accent-color); }
+    .mode-card p { color: var(--text-secondary); margin-bottom: 0; font-size: 0.95rem; }
+    
+    .back-button {
+      background: #e9ecef;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .back-button:hover { background-color: #dee2e6; color: var(--text-primary); }
+
+    .mode-container-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .mode-container-header h2 {
+      font-size: 1.5rem;
+    }
+
+    .flashcards-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: center;
+    }
+
+    .flashcard {
+      background-color: transparent;
+      width: 250px;
+      height: 180px;
+      cursor: pointer;
+      perspective: 1000px;
+    }
+
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.7s;
+      transform-style: preserve-3d;
+      box-shadow: 0 4px 15px var(--shadow-light);
+      border-radius: 10px;
+    }
+
+    .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+
+    .flashcard-front, .flashcard-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background-color: var(--surface-color);
+    }
+    
+    .flashcard.flipped .flashcard-back { border-color: var(--accent-color); }
+    .flashcard-back { transform: rotateY(180deg); }
+    .term { font-size: 1.25em; font-weight: 500; }
+    .definition { font-size: 1em; color: var(--text-secondary); line-height: 1.4; }
+    
+    .quiz-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .quiz-card {
+      width: 100%;
+      min-height: 160px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background-color: var(--surface-color);
+      box-shadow: 0 4px 15px var(--shadow-light);
+    }
+    
+    .quiz-answer-input, .dictation-answer-input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }
+    
+    .quiz-feedback { width: 100%; padding: 1rem; border-radius: 8px; text-align: left; line-height: 1.5; }
+    .quiz-feedback.correct { background-color: #e8f5e9; border: 1px solid var(--correct-color); }
+    .quiz-feedback.partial { background-color: #fff8e1; border: 1px solid #d1a55d; }
+    .quiz-feedback.incorrect { background-color: #fce4e4; border: 1px solid var(--error-color); }
+    .quiz-feedback strong { display: block; margin-bottom: 0.5rem; font-size: 1.1rem; }
+    .quiz-feedback strong.correct { color: var(--correct-color); }
+    .quiz-feedback strong.partial { color: #d1a55d; }
+    .quiz-feedback strong.incorrect { color: var(--error-color); }
+
+    .progress-text { font-size: 1.1rem; font-weight: 500; margin-bottom: 1rem; }
+    
+    .dictation-listen-button { font-size: 2.5rem; padding: 1.5rem; border-radius: 50%; width: 80px; height: 80px; }
+
+    .dictation-results-table {
+      width: 100%; margin-top: 1.5rem; border-collapse: collapse; text-align: left;
+    }
+    .dictation-results-table th, .dictation-results-table td {
+      padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color);
+    }
+    .dictation-results-table th { font-weight: 700; background-color: var(--bg-color); }
+    .dictation-results-table tr:last-child td { border-bottom: none; }
+    .dictation-results-table .status-correct { color: var(--correct-color); }
+    .dictation-results-table .status-incorrect { color: var(--error-color); }
+    .dictation-results-table .correct-answer-feedback { font-size: 0.85em; color: var(--text-secondary); margin-top: 0.25rem; }
+
+    .hidden { display: none; }
+    
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    button .button-text.hidden { display: none; }
+    
+    .mode-switcher {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      background-color: var(--bg-color);
+      padding: 0.5rem;
+      border-radius: 8px;
+    }
+
+    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 26px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--accent-color); }
+    input:checked:disabled + .slider { background-color: #adb5bd; }
+    input:checked + .slider:before { transform: translateX(24px); }
+    #mode-label { font-weight: 500; min-width: 80px; text-align: left; }
+    
+    /* DICTATION PAGE STYLES */
+    .dictation-page-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--bg-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        padding: 1rem;
+        z-index: 100;
+        opacity: 0;
+        transform: scale(1.02);
+        pointer-events: none;
+        transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .dictation-page-container.visible {
+        opacity: 1;
+        transform: scale(1);
+        pointer-events: auto;
+    }
+    .dictation-page-content {
+        background-color: var(--surface-color);
+        padding: 2.5rem;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px var(--shadow-light);
+        width: 100%;
+        max-width: 600px;
+        text-align: center;
+    }
+    .dictation-translation {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+        font-family: var(--font-family-zh);
+    }
+    .dictation-feedback {
+        margin-top: 1rem;
+        font-weight: 500;
+        min-height: 1.5em;
+    }
+
+    @media (max-width: 768px) {
+      body { padding: 1rem 0.5rem; }
+      .container { padding: 1.5rem; }
+      .header-top { flex-direction: column; align-items: flex-start; gap: 1rem; }
+      h1 { font-size: 1.8rem; }
+      .language-switcher { align-self: flex-start; }
+      .main-controls, .dictation-controls { flex-direction: column; gap: 1rem; align-items: stretch; }
+      .flashcard { width: 100%; max-width: 300px; }
+      .dictation-page-content { padding: 1.5rem; }
+      .view.hidden { width: calc(100% - 3rem); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="appContainer">
+    <header class="app-header">
+      <div class="header-top">
+        <h1 data-translate-key="appTitle">Flipcard Study</h1>
+        <div class="language-switcher">
+          <button class="lang-button" data-lang="en">English</button>
+          <button class="lang-button" data-lang="zh-HK">繁體中文</button>
+        </div>
+      </div>
+      <p data-translate-key="appDescription">Generate study cards for your HKDSE prep or run vocabulary dictation drills. Pick a mode to get started!</p>
+      <input type="password" id="apiKeyInput" data-translate-key="apiKeyPlaceholder" placeholder="Enter your Google AI API Key here">
+    </header>
+
+    <main id="mainContent">
+      <!-- MODE SELECTION -->
+      <div id="modeSelectionContainer" class="view mode-selection-container">
+          <div class="mode-card" id="selectStudyMode">
+              <h2 data-translate-key="studyModeTitle">📚 Study Mode</h2>
+              <p data-translate-key="studyModeDescription">Enter a topic and AI will generate flashcards and a quiz for you.</p>
+          </div>
+          <div class="mode-card" id="selectDictationMode">
+              <h2 data-translate-key="dictationModeTitle">🎧 Dictation Mode</h2>
+              <p data-translate-key="dictationModeDescription">Input your vocabulary list and test yourself with audio dictation.</p>
+          </div>
+      </div>
+
+      <!-- STUDY MODE -->
+      <div id="studyModeContainer" class="view hidden">
+        <div class="mode-container-header">
+          <button class="back-button" aria-label="Back to mode selection">←</button>
+          <h2 data-translate-key="studyModeTitle">Study Mode</h2>
+        </div>
+        <textarea id="topicInput" data-translate-key="studyTopicPlaceholder" placeholder="Enter a topic, e.g., 'Photosynthesis' or 'Medieval Europe'"></textarea>
+        <div class="main-controls">
+          <button id="generateButton">
+            <span class="button-text" data-translate-key="generateButton">Generate Flashcards</span>
+            <span class="spinner hidden"></span>
+          </button>
+          <button id="importButton" data-translate-key="importButton">Import Cards</button>
+          <button id="exportButton" class="hidden" data-translate-key="exportButton">Export Cards</button>
+        </div>
+         <div class="main-controls">
+            <div class="mode-switcher hidden" id="modeSwitcher">
+              <label class="toggle-switch">
+                <input type="checkbox" id="modeToggle">
+                <span class="slider"></span>
+              </label>
+              <span id="mode-label" data-translate-key="studyModeLabel">Study Mode</span>
+            </div>
+         </div>
+      </div>
+      
+      <!-- DICTATION MODE -->
+      <div id="dictationModeContainer" class="view hidden">
+        <div class="mode-container-header">
+            <button class="back-button" aria-label="Back to mode selection">←</button>
+            <h2 data-translate-key="dictationModeTitle">Dictation Mode</h2>
+        </div>
+        <textarea id="dictationListInput" data-translate-key="dictationListPlaceholder" placeholder="Enter your vocabulary list here. Any format is okay - AI will clean it up for you."></textarea>
+        <div class="dictation-controls">
+            <button id="translateButton">
+                <span class="button-text" data-translate-key="translateButton">Translate to Chinese</span>
+                <span class="spinner hidden"></span>
+            </button>
+            <button id="startDictationButton">
+                <span class="button-text" data-translate-key="startDictationButton">Start Dictation</span>
+                <span class="spinner hidden"></span>
+            </button>
+        </div>
+      </div>
+    </main>
+    
+    <div id="statusMessage" class="status-message"></div>
+    <div id="content-area">
+      <!-- Dynamic content (flashcards or quiz) will be injected here -->
+    </div>
+  </div>
+
+  <!-- DICTATION PAGE -->
+  <div id="dictationPage" class="dictation-page-container">
+    <!-- Dictation practice/results will be injected here -->
+  </div>
+
+  <input type="file" id="importInput" class="hidden" accept=".json">
+
+  <script type="module">
+    import { GoogleGenAI, Type } from "@google/genai";
+
+    // --- I18n Translations ---
+    const translations = {
+        en: {
+            appTitle: "Flipcard Study",
+            appDescription: "Generate study cards for your HKDSE prep or run vocabulary dictation drills. Pick a mode to get started!",
+            apiKeyPlaceholder: "Enter your Google AI API Key here",
+            studyModeTitle: "📚 Study Mode",
+            studyModeDescription: "Enter a topic and AI will generate flashcards and a quiz for you.",
+            dictationModeTitle: "🎧 Dictation Mode",
+            dictationModeDescription: "Input your vocabulary list and test yourself with audio dictation.",
+            studyTopicPlaceholder: "Enter a topic, e.g., 'Photosynthesis' or 'Medieval Europe'",
+            generateButton: "Generate Flashcards",
+            importButton: "Import Cards",
+            exportButton: "Export Cards",
+            studyModeLabel: "Study Mode",
+            quizModeLabel: "Quiz Mode",
+            dictationListPlaceholder: "Enter your vocabulary list here. Any format is okay - AI will clean it up for you.",
+            translateButton: "Translate to Chinese",
+            startDictationButton: "Start Dictation",
+            statusGenerating: "Generating flashcards for you...",
+            statusTranslating: "Translating your list...",
+            statusParsing: "Cleaning up your list...",
+            errorApiKey: "Please enter your Google AI API Key.",
+            errorTopic: "Please enter a topic.",
+            errorNoCards: "Could not generate flashcards. Please try a different topic.",
+            errorGeneral: "An error occurred: ",
+            errorUnknown: "Unknown error",
+            errorImport: "Import failed: ",
+            errorNoExport: "No cards to export.",
+            errorInvalidFile: "Invalid file format.",
+            errorSpeechSynthesis: "Your browser does not support speech synthesis.",
+            errorDictationList: "Please enter a vocabulary list.",
+            errorNoValidWords: "No valid words found in your list.",
+            quizQuestion: "Question",
+            quizScore: "Score",
+            quizAnswerPlaceholder: "Type your answer here...",
+            submitAnswerButton: "Submit Answer",
+            evaluatingAnswer: "Evaluating...",
+            nextQuestionButton: "Next Question",
+            quizCompleteTitle: "Quiz Complete!",
+            finalScore: "Your final score",
+            restartQuizButton: "Restart Quiz",
+            dictationWord: "Word",
+            checkButton: "Check",
+            nextWordButton: "Next →",
+            dictationCompleteTitle: "Dictation Complete!",
+            correctWord: "Correct Word",
+            yourAnswer: "Your Answer",
+            status: "Status",
+            practiceAgainButton: "Practice Again",
+            backToMenuButton: "Back to Main Menu",
+            feedbackCorrectAnswerIs: "The correct answer is:",
+        },
+        'zh-HK': {
+            appTitle: "溫習卡學習",
+            appDescription: "為您的香港中學文憑考試 (HKDSE) 生成學習卡或進行詞彙聽寫練習。選擇一種模式即可開始！",
+            apiKeyPlaceholder: "在此處輸入您的 Google AI API Key",
+            studyModeTitle: "📚 學習模式",
+            studyModeDescription: "輸入一個主題，AI會為您生成學習卡和測驗。",
+            dictationModeTitle: "🎧 聽寫模式",
+            dictationModeDescription: "輸入您的詞彙列表，並通過聽寫練習來測試自己。",
+            studyTopicPlaceholder: "輸入主題，例如：“光合作用”或“中世紀歐洲”",
+            generateButton: "生成學習卡",
+            importButton: "導入學習卡",
+            exportButton: "導出學習卡",
+            studyModeLabel: "學習模式",
+            quizModeLabel: "測驗模式",
+            dictationListPlaceholder: "在此處輸入您的詞彙列表。任何格式都可以 - AI會為您整理。",
+            translateButton: "翻譯為中文",
+            startDictationButton: "開始聽寫",
+            statusGenerating: "正在為您生成學習卡...",
+            statusTranslating: "正在翻譯您的列表...",
+            statusParsing: "正在整理您的列表...",
+            errorApiKey: "請輸入您的 Google AI API Key。",
+            errorTopic: "請輸入一個主題。",
+            errorNoCards: "無法生成學習卡。請嘗試不同的主題或重新措辭。",
+            errorGeneral: "生成時發生錯誤: ",
+            errorUnknown: "未知錯誤",
+            errorImport: "導入失敗: ",
+            errorNoExport: "沒有可導出的學習卡。",
+            errorInvalidFile: "無效的文件格式。",
+            errorSpeechSynthesis: "您的瀏覽器不支持語音合成。",
+            errorDictationList: "請輸入詞彙列表。",
+            errorNoValidWords: "您的列表中未找到有效詞彙。",
+            quizQuestion: "問題",
+            quizScore: "分數",
+            quizAnswerPlaceholder: "在這裡輸入您的答案...",
+            submitAnswerButton: "提交答案",
+            evaluatingAnswer: "評估中...",
+            nextQuestionButton: "下一個問題",
+            quizCompleteTitle: "測驗完成！",
+            finalScore: "您的最終分數",
+            restartQuizButton: "重新開始測驗",
+            dictationWord: "詞語",
+            checkButton: "檢查",
+            nextWordButton: "下一個 →",
+            dictationCompleteTitle: "聽寫完成！",
+            correctWord: "正確詞語",
+            yourAnswer: "您的答案",
+            status: "狀態",
+            practiceAgainButton: "再次練習",
+            backToMenuButton: "返回主菜單",
+            feedbackCorrectAnswerIs: "正確答案是：",
+        }
+    };
+    let currentLanguage = 'en';
+
+    // --- DOM Elements ---
+    const appContainer = document.getElementById('appContainer');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const statusMessage = document.getElementById('statusMessage');
+    const contentArea = document.getElementById('content-area');
+    const mainContent = document.getElementById('mainContent');
+
+    // View Containers
+    const modeSelectionContainer = document.getElementById('modeSelectionContainer');
+    const studyModeContainer = document.getElementById('studyModeContainer');
+    const dictationModeContainer = document.getElementById('dictationModeContainer');
+    const dictationPage = document.getElementById('dictationPage');
+
+    // Mode Selection
+    const selectStudyMode = document.getElementById('selectStudyMode');
+    const selectDictationMode = document.getElementById('selectDictationMode');
+    
+    // Study Mode Elements
+    const topicInput = document.getElementById('topicInput');
+    const generateButton = document.getElementById('generateButton');
+    const importButton = document.getElementById('importButton');
+    const exportButton = document.getElementById('exportButton');
+    const importInput = document.getElementById('importInput');
+    const modeSwitcher = document.getElementById('modeSwitcher');
+    const modeToggle = document.getElementById('modeToggle');
+    const modeLabel = document.getElementById('mode-label');
+    
+    // Dictation Mode Elements
+    const dictationListInput = document.getElementById('dictationListInput');
+    const startDictationButton = document.getElementById('startDictationButton');
+    const translateButton = document.getElementById('translateButton');
+
+    // --- State ---
+    let ai = null;
+    let flashcards = [];
+    let currentStudyMode = 'study';
+    let quizIndex = 0;
+    let quizScore = 0;
+    let maxQuizScore = 0;
+    let dictationWords = []; // Will now be an array of objects {english, chinese}
+    let userAnswers = [];
+    let currentDictationIndex = 0;
+
+    // --- Utility Functions ---
+    const getTranslation = (key) => translations[currentLanguage][key] || key;
+
+    function handleError(key) {
+      statusMessage.textContent = getTranslation(key);
+      statusMessage.classList.add('error');
+    }
+
+    function showStatus(key, isError = false) {
+      statusMessage.textContent = key ? getTranslation(key) : '';
+      statusMessage.classList.toggle('error', isError);
+    }
+    
+    function toggleLoading(button, isLoading) {
+        button.disabled = isLoading;
+        const buttonText = button.querySelector('.button-text');
+        const spinner = button.querySelector('.spinner');
+        if (isLoading) {
+            buttonText.classList.add('hidden');
+            spinner.classList.remove('hidden');
+        } else {
+            buttonText.classList.remove('hidden');
+            spinner.classList.add('hidden');
+        }
+    }
+
+    // --- I18n Functions ---
+    function setLanguage(lang) {
+        if (!translations[lang]) return;
+        currentLanguage = lang;
+        localStorage.setItem('userLanguage', lang);
+
+        document.documentElement.lang = lang;
+        
+        document.querySelectorAll('[data-translate-key]').forEach(el => {
+            const key = el.getAttribute('data-translate-key');
+            const translation = getTranslation(key);
+            if (el.placeholder) {
+                el.placeholder = translation;
+            } else {
+                el.textContent = translation;
+            }
+        });
+        
+        document.querySelectorAll('.lang-button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.lang === lang);
+        });
+        
+        // Update dynamic labels
+        if (flashcards.length > 0) {
+          modeLabel.textContent = currentStudyMode === 'quiz' ? getTranslation('quizModeLabel') : getTranslation('studyModeLabel');
+        }
+    }
+
+    function initializeLanguage() {
+        const savedLang = localStorage.getItem('userLanguage');
+        const browserLang = navigator.language.startsWith('zh') ? 'zh-HK' : 'en';
+        setLanguage(savedLang || browserLang);
+    }
+
+    // --- Initialization ---
+    function initialize() {
+        setupEventListeners();
+        updateButtonStates();
+        initializeLanguage();
+    }
+    
+    function setupEventListeners() {
+        apiKeyInput.addEventListener('input', updateButtonStates);
+        
+        document.querySelectorAll('.lang-button').forEach(btn => {
+            btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+        });
+        
+        selectStudyMode.addEventListener('click', () => showView('study'));
+        selectDictationMode.addEventListener('click', () => showView('dictation'));
+        document.querySelectorAll('.back-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                showView('selection');
+                resetStudyMode();
+            });
+        });
+        
+        generateButton.addEventListener('click', generateFlashcards);
+        modeToggle.addEventListener('change', handleStudyModeChange);
+        importButton.addEventListener('click', () => importInput.click());
+        exportButton.addEventListener('click', exportFlashcards);
+        importInput.addEventListener('change', importFlashcards);
+        
+        startDictationButton.addEventListener('click', startDictation);
+        translateButton.addEventListener('click', translateVocabulary);
+    }
+    
+    function updateButtonStates() {
+      const hasApiKey = apiKeyInput.value.trim().length > 0;
+      generateButton.disabled = !hasApiKey;
+      startDictationButton.disabled = !hasApiKey;
+      translateButton.disabled = !hasApiKey;
+      modeToggle.disabled = flashcards.length === 0;
+    }
+
+    // --- View Management ---
+    function showView(viewName) {
+        [modeSelectionContainer, studyModeContainer, dictationModeContainer].forEach(v => v.classList.add('hidden'));
+        contentArea.innerHTML = '';
+        showStatus('');
+
+        let viewToShow;
+        switch(viewName) {
+            case 'study': viewToShow = studyModeContainer; break;
+            case 'dictation': viewToShow = dictationModeContainer; break;
+            case 'selection':
+            default: viewToShow = modeSelectionContainer; break;
+        }
+        
+        // Use a short timeout to allow the 'hidden' class to apply before removing it, enabling the transition
+        setTimeout(() => {
+            viewToShow.classList.remove('hidden');
+        }, 10);
+    }
+    
+    function showDictationPage(show) {
+        if (show) {
+            appContainer.classList.add('hidden');
+            dictationPage.classList.add('visible');
+        } else {
+            appContainer.classList.remove('hidden');
+            dictationPage.classList.remove('visible');
+        }
+    }
+
+    // --- AI Initialization ---
+    function initializeAi() {
+        const apiKey = apiKeyInput.value.trim();
+        if (!apiKey) {
+            handleError('errorApiKey');
+            return false;
+        }
+        if (!ai || ai.apiKey !== apiKey) {
+            try {
+                ai = new GoogleGenAI({ apiKey });
+            } catch(e) {
+                handleError('errorApiKey');
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    function resetStudyMode() {
+        flashcards = [];
+        modeSwitcher.classList.add('hidden');
+        exportButton.classList.add('hidden');
+        modeToggle.checked = false;
+        modeToggle.disabled = true;
+        currentStudyMode = 'study';
+    }
+
+    // --- Study Mode Functions ---
+    async function generateFlashcards() {
+      if (!initializeAi()) return;
+      
+      const topic = topicInput.value.trim();
+      if (!topic) {
+        handleError('errorTopic');
+        return;
+      }
+
+      showStatus('statusGenerating');
+      toggleLoading(generateButton, true);
+      contentArea.innerHTML = '';
+      resetStudyMode();
+
+      try {
+        const prompt = `As an expert tutor for the Hong Kong Diploma of Secondary Education (HKDSE) curriculum, create a set of at least 5 flashcards for the topic "${topic}". The terms and definitions should be clear, concise, and directly relevant to the HKDSE syllabus.`;
+        const result = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: { parts: [{ text: prompt }] },
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { term: { type: Type.STRING }, definition: { type: Type.STRING } } } }
+            }
+        });
+        const parsedFlashcards = JSON.parse(result.text);
+
+        if (parsedFlashcards && parsedFlashcards.length > 0) {
+          flashcards = parsedFlashcards;
+          showStatus('');
+          modeSwitcher.classList.remove('hidden');
+          exportButton.classList.remove('hidden');
+          updateButtonStates();
+          renderStudyContent();
+        } else {
+          handleError('errorNoCards');
+        }
+      } catch (error) {
+        console.error('Error generating content:', error);
+        handleError('errorGeneral' + (error.message || getTranslation('errorUnknown')));
+      } finally {
+        toggleLoading(generateButton, false);
+      }
+    }
+
+    function exportFlashcards() {
+      if (flashcards.length === 0) {
+        handleError('errorNoExport');
+        return;
+      }
+      const topic = topicInput.value.trim().replace(/\s+/g, '_') || 'flashcards';
+      const fileName = `flashcards-${topic}.json`;
+      const dataStr = JSON.stringify(flashcards, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function importFlashcards(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          if (!Array.isArray(importedData) || importedData.some(item => !item.term || !item.definition)) {
+            throw new Error(getTranslation('errorInvalidFile'));
+          }
+          flashcards = importedData;
+          showStatus('');
+          modeSwitcher.classList.remove('hidden');
+          exportButton.classList.remove('hidden');
+          updateButtonStates();
+          topicInput.value = 'Imported Flashcards';
+          renderStudyContent();
+        } catch (error) {
+          handleError('errorImport' + error.message);
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function handleStudyModeChange() {
+      if (flashcards.length === 0) return;
+      currentStudyMode = modeToggle.checked ? 'quiz' : 'study';
+      modeLabel.textContent = currentStudyMode === 'quiz' ? getTranslation('quizModeLabel') : getTranslation('studyModeLabel');
+      renderStudyContent();
+    }
+    
+    function renderStudyContent() {
+        contentArea.innerHTML = '';
+        if (currentStudyMode === 'study') {
+            renderStudyMode();
+        } else {
+            quizIndex = 0;
+            quizScore = 0;
+            maxQuizScore = flashcards.length * 2;
+            renderQuizMode();
+        }
+    }
+
+    function renderStudyMode() {
+      const container = document.createElement('div');
+      container.className = 'flashcards-container';
+      flashcards.forEach(cardData => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'flashcard';
+        cardEl.innerHTML = `<div class="flashcard-inner"><div class="flashcard-front"><div class="term">${cardData.term}</div></div><div class="flashcard-back"><div class="definition">${cardData.definition}</div></div></div>`;
+        cardEl.addEventListener('click', () => cardEl.classList.toggle('flipped'));
+        container.appendChild(cardEl);
+      });
+      contentArea.appendChild(container);
+    }
+    
+    function renderQuizMode() {
+        contentArea.innerHTML = '';
+        if (quizIndex >= flashcards.length) {
+            renderQuizEndScreen();
+            return;
+        }
+        const currentCard = flashcards[quizIndex];
+        const quizContainer = document.createElement('div');
+        quizContainer.className = 'quiz-container';
+        quizContainer.innerHTML = `
+            <div class="progress-text">${getTranslation('quizQuestion')} ${quizIndex + 1} / ${flashcards.length} | ${getTranslation('quizScore')}: ${quizScore} / ${maxQuizScore}</div>
+            <div class="quiz-card"><div class="term">${currentCard.term}</div></div>
+            <textarea class="quiz-answer-input" placeholder="${getTranslation('quizAnswerPlaceholder')}"></textarea>
+            <button id="submitAnswerBtn">${getTranslation('submitAnswerButton')}</button>
+            <div id="quizFeedbackContainer"></div>`;
+        contentArea.appendChild(quizContainer);
+        quizContainer.querySelector('#submitAnswerBtn').addEventListener('click', () => {
+            const answer = quizContainer.querySelector('.quiz-answer-input').value;
+            checkQuizAnswer(answer, currentCard);
+        });
+    }
+    
+    async function checkQuizAnswer(userAnswer, card) {
+        if (!userAnswer.trim()) return;
+        if (!initializeAi()) return;
+
+        const submitBtn = document.getElementById('submitAnswerBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = getTranslation('evaluatingAnswer');
+        const feedbackContainer = document.getElementById('quizFeedbackContainer');
+        feedbackContainer.innerHTML = '';
+        
+        try {
+            const prompt = `You are an HKDSE exam marker. The subject is "${topicInput.value}". The question is: "What is ${card.term}?". The model answer is: "${card.definition}". The student's answer is: "${userAnswer}". Is the student's answer correct? Provide a very brief, one-sentence explanation and a score of CORRECT, PARTIAL, or INCORRECT.`;
+            const result = await ai.models.generateContent({
+              model: 'gemini-2.5-flash',
+              contents: { parts: [{ text: prompt }] },
+              config: { responseMimeType: "application/json", responseSchema: { type: Type.OBJECT, properties: { evaluation: { type: Type.STRING }, score: { type: Type.STRING } } } }
+            });
+            const { evaluation, score } = JSON.parse(result.text);
+            let scoreClass = 'incorrect';
+            if (score.toUpperCase() === 'CORRECT') { scoreClass = 'correct'; quizScore += 2; } 
+            else if (score.toUpperCase() === 'PARTIAL') { scoreClass = 'partial'; quizScore += 1; }
+
+            feedbackContainer.innerHTML = `<div class="quiz-feedback ${scoreClass}"><strong class="${scoreClass}">${score.toUpperCase()} (+${score.toUpperCase() === 'CORRECT' ? 2 : (score.toUpperCase() === 'PARTIAL' ? 1 : 0)} pts)</strong><p><strong>評價:</strong> ${evaluation}</p><p><strong>正確答案:</strong> ${card.definition}</p></div>`;
+            submitBtn.textContent = getTranslation('nextQuestionButton');
+            submitBtn.disabled = false;
+            submitBtn.onclick = () => { quizIndex++; renderQuizMode(); };
+        } catch (error) {
+            console.error('Error evaluating answer:', error);
+            feedbackContainer.innerHTML = `<p class="error">評估答案時出錯，請重試。</p>`;
+            submitBtn.textContent = getTranslation('submitAnswerButton');
+            submitBtn.disabled = false;
+        }
+    }
+
+    function renderQuizEndScreen() {
+        contentArea.innerHTML = `
+            <div class="quiz-container">
+                <h2>${getTranslation('quizCompleteTitle')}</h2>
+                <p class="progress-text">${getTranslation('finalScore')}: ${quizScore} / ${maxQuizScore}</p>
+                <button id="restartQuizBtn">${getTranslation('restartQuizButton')}</button>
+            </div>`;
+        document.getElementById('restartQuizBtn').addEventListener('click', () => {
+            quizIndex = 0; quizScore = 0; renderQuizMode();
+        });
+    }
+
+    // --- Dictation Mode AI Functions ---
+    async function translateVocabulary() {
+        if (!initializeAi()) return;
+        const list = dictationListInput.value.trim();
+        if (!list) {
+            handleError('errorDictationList');
+            return;
+        }
+
+        showStatus('statusTranslating');
+        toggleLoading(translateButton, true);
+        
+        try {
+            const prompt = `For the following list of English vocabulary, provide a concise Traditional Chinese translation for each item suitable for HKDSE students. Here is the list:\n\n${list}`;
+            const result = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: { parts: [{ text: prompt }] },
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: Type.ARRAY,
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                english: { type: Type.STRING },
+                                chinese: { type: Type.STRING }
+                            }
+                        }
+                    }
+                }
+            });
+            const translations = JSON.parse(result.text);
+            if (translations && translations.length > 0) {
+                dictationListInput.value = translations.map(t => `${t.english} - ${t.chinese}`).join('\n');
+                showStatus('');
+            }
+        } catch(error) {
+            console.error('Error translating list:', error);
+            handleError('errorGeneral' + (error.message || getTranslation('errorUnknown')));
+        } finally {
+            toggleLoading(translateButton, false);
+        }
+    }
+
+    async function parseVocabularyList() {
+        if (!initializeAi()) return null;
+        const list = dictationListInput.value.trim();
+        if (!list) {
+            handleError('errorDictationList');
+            return null;
+        }
+
+        showStatus('statusParsing');
+        toggleLoading(startDictationButton, true);
+        
+        try {
+            const prompt = `Analyze the following text which contains a vocabulary list. For each item, identify the primary English term and its corresponding Traditional Chinese translation, if one is provided. Structure the output as a JSON array of objects, where each object has an "english" key and a "chinese" key. If no Chinese translation is found for an item, the value for "chinese" should be an empty string. Text:\n\n${list}`;
+            const result = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: { parts: [{ text: prompt }] },
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: Type.ARRAY,
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                english: { type: Type.STRING },
+                                chinese: { type: Type.STRING }
+                            }
+                        }
+                    }
+                }
+            });
+            const parsedList = JSON.parse(result.text);
+            if (parsedList && parsedList.length > 0) {
+                return parsedList.filter(item => item.english); // Filter out any empty entries
+            }
+            return null;
+        } catch(error) {
+            console.error('Error parsing list:', error);
+            handleError('errorGeneral' + (error.message || getTranslation('errorUnknown')));
+            return null;
+        } finally {
+            toggleLoading(startDictationButton, false);
+            showStatus('');
+        }
+    }
+
+    // --- Dictation Mode Functions ---
+    async function startDictation() {
+        if (!('speechSynthesis' in window)) {
+            handleError('errorSpeechSynthesis');
+            return;
+        }
+
+        const parsedWords = await parseVocabularyList();
+        if (!parsedWords || parsedWords.length === 0) {
+            handleError('errorNoValidWords');
+            return;
+        }
+        
+        dictationWords = parsedWords;
+        userAnswers = [];
+        currentDictationIndex = 0;
+        showStatus('');
+        showDictationPage(true);
+        renderDictationPractice();
+    }
+    
+    function renderDictationPractice() {
+        dictationPage.innerHTML = '';
+        if (currentDictationIndex >= dictationWords.length) {
+            renderDictationResults();
+            return;
+        }
+
+        const currentItem = dictationWords[currentDictationIndex];
+        const content = document.createElement('div');
+        content.className = 'dictation-page-content';
+        content.innerHTML = `
+            <div class="progress-text">${getTranslation('dictationWord')} ${currentDictationIndex + 1} / ${dictationWords.length}</div>
+            ${currentItem.chinese ? `<div class="dictation-translation">${currentItem.chinese}</div>` : ''}
+            <button class="dictation-listen-button" aria-label="Listen to the word">🔊</button>
+            <input type="text" class="dictation-answer-input" placeholder="${getTranslation('quizAnswerPlaceholder')}" />
+            <div id="dictationFeedback" class="dictation-feedback"></div>
+            <button id="checkDictationBtn">${getTranslation('checkButton')}</button>`;
+        dictationPage.appendChild(content);
+
+        const listenBtn = content.querySelector('.dictation-listen-button');
+        const checkBtn = content.querySelector('#checkDictationBtn');
+        const answerInput = content.querySelector('.dictation-answer-input');
+        
+        answerInput.focus();
+        speakWord(currentItem.english);
+
+        listenBtn.addEventListener('click', () => speakWord(currentItem.english));
+        const checkAnswerHandler = () => checkDictationAnswer(answerInput, currentItem, checkBtn);
+        checkBtn.addEventListener('click', checkAnswerHandler);
+        answerInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') checkAnswerHandler();
+        });
+    }
+    
+    function speakWord(word) {
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'en-US'; // Ensure correct pronunciation
+        speechSynthesis.speak(utterance);
+    }
+
+    function checkDictationAnswer(inputEl, currentItem, buttonEl) {
+        const userAnswer = inputEl.value.trim();
+        if (!userAnswer) return;
+
+        const correctWord = currentItem.english;
+        const isCorrect = userAnswer.toLowerCase() === correctWord.toLowerCase();
+        userAnswers.push({ word: correctWord, userAnswer, isCorrect });
+        
+        inputEl.disabled = true;
+        inputEl.style.borderColor = isCorrect ? 'var(--correct-color)' : 'var(--error-color)';
+        
+        const feedbackEl = document.getElementById('dictationFeedback');
+        if (!isCorrect) {
+            feedbackEl.textContent = `${getTranslation('feedbackCorrectAnswerIs')} ${correctWord}`;
+            feedbackEl.style.color = 'var(--error-color)';
+        } else {
+            feedbackEl.textContent = '✔';
+            feedbackEl.style.color = 'var(--correct-color)';
+        }
+
+        buttonEl.textContent = getTranslation('nextWordButton');
+        buttonEl.focus();
+        buttonEl.onclick = () => {
+            currentDictationIndex++;
+            renderDictationPractice();
+        };
+    }
+    
+    function renderDictationResults() {
+        const correctCount = userAnswers.filter(a => a.isCorrect).length;
+        const content = document.createElement('div');
+        content.className = 'dictation-page-content';
+
+        let tableRows = userAnswers.map(answer => `
+            <tr>
+                <td>${answer.word}</td>
+                <td>
+                    <span class="${answer.isCorrect ? '' : 'status-incorrect'}">${answer.userAnswer || '-'}</span>
+                    ${!answer.isCorrect ? `<div class="correct-answer-feedback">${getTranslation('feedbackCorrectAnswerIs')} ${answer.word}</div>` : ''}
+                </td>
+                <td class="${answer.isCorrect ? 'status-correct' : 'status-incorrect'}">${answer.isCorrect ? '✔' : '✖'}</td>
+            </tr>`).join('');
+
+        content.innerHTML = `
+            <h2>${getTranslation('dictationCompleteTitle')}</h2>
+            <p class="progress-text">${getTranslation('finalScore')}: ${correctCount} / ${dictationWords.length}</p>
+            <div style="max-height: 30vh; overflow-y: auto;">
+              <table class="dictation-results-table">
+                  <thead><tr><th>${getTranslation('correctWord')}</th><th>${getTranslation('yourAnswer')}</th><th>${getTranslation('status')}</th></tr></thead>
+                  <tbody>${tableRows}</tbody>
+              </table>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button id="practiceAgainBtn">${getTranslation('practiceAgainButton')}</button>
+                <button id="backToMenuBtn" class="button secondary">${getTranslation('backToMenuButton')}</button>
+            </div>`;
+        dictationPage.innerHTML = '';
+        dictationPage.appendChild(content);
+        
+        document.getElementById('practiceAgainBtn').addEventListener('click', startDictation);
+        document.getElementById('backToMenuBtn').addEventListener('click', () => {
+            showDictationPage(false);
+            showView('selection');
+        });
+    }
+    
+    // --- Start the App ---
+    initialize();
+
+  </script>
+</body>
+</html>
